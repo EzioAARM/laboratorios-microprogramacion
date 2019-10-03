@@ -1,23 +1,148 @@
-.MODEL small                                ; modelo
-.DATA                                       ; variables
-texto DB 'El simbolo escogido es: $'        ; Variable con nombre
-
+.MODEL small
+.DATA
+    NUM1 DB ?
+    NUM2 DB ?
+    RESULT DB ?
+    MSG1 DB 10, 13, "Ingrese el primer numero:$"
+    MSG2 DB 10, 13, "Ingrese el segundo numero:$"
+    RES1 DB 10, 13, "Suma:$"
+    RES2 DB 10, 13, "Diferencia:$"
+    RES3 DB 10, 13, "Producto:$"
+    RES4 DB 10, 13, "Cociente:$"
+    RES5 DB 10, 13, "Residuo:$"
 .STACK
 .CODE
-Programa:                       ; Etiqueta de inicio
-; Inicialización del programa
-MOV AX, @DATA                   ; Guardando direccion de inicio segmento de
+Programa:       ; Etiqueta de inicio del Programa
+;inicializar el Programa
+MOV AX, @DATA    ; Guardando dirección de inicio segmento de
 MOV DS, AX
+    
+    LEA DX, MSG1
+    MOV AH, 09
+    INT 21H
 
-; Imprime la cadena con el texti que quiero
-MOV DX, OFFSET texto            ; Asignando la variable a DX
-MOV AH, 09H                     ; Decir que la cadena se imprima
-INT 21H                         ; Ejecuta la interrupción
+    MOV AH, 01
+    INT 21H
+    SUB AL, 30H
+    MOV NUM1, AL
 
-MOV DL, 38                      ; Se asigna el ASCII 9 a DL para imprimirlo
-MOV AH, 02                      ; Se asigna el valor para imprimirlo en pantalla
-INT 21H                         ; Ejecuta la interrupcion
+    LEA DX, MSG2
+    MOV AH, 09
+    INT 21H
 
-MOV AH, 4CH
-INT 21H
-END Programa
+    MOV AH, 01
+    INT 21H
+    SUB AL, 30H
+    MOV NUM2, AL
+
+    ;SUMA
+    ADD AL, NUM1
+
+    MOV AH, 0
+    AAA
+    ADD AH, 30H
+    ADD AL, 30H
+
+    MOV BX, AX
+
+    ;IMPRIMIR SUMA
+    LEA DX, RES1
+    MOV AH, 09
+    INT 21H
+
+    MOV AH, 02
+    MOV DL, BH
+    INT 21H
+
+    MOV AH, 02
+    MOV DL, BL
+    INT 21H
+
+    ;RESTA
+    MOV AX, 0000
+    MOV AL, NUM1
+    SUB AL, NUM2
+    ;MOV RESULT, AL
+
+    MOV AH, 0
+    AAA
+    ADD AH, 30H
+    ADD AL, 30H
+
+    MOV BX, AX
+
+    ;IMPRIMIR RESTA
+    LEA DX, RES2
+    MOV AH, 09
+    INT 21H
+
+    MOV AH, 02
+    MOV DL, BH
+    INT 21H
+
+    MOV AH, 02
+    MOV DL, BL
+    INT 21H
+
+    ;MULTIPLICACION
+    MOV AX, 0000
+    MOV AL, NUM1
+    MUL NUM2
+    ;MOV RESULT, AL
+
+    MOV AH, 0
+    AAA
+    ADD AH, 30H
+    ADD AL, 30H
+
+    MOV BX, AX
+
+    ;IMPRIMIR MULTIPLICACION
+    LEA DX, RES3
+    MOV AH, 09
+    INT 21H
+
+    MOV AH, 02
+    MOV DL, BH
+    INT 21H
+
+    MOV AH, 02
+    MOV DL, BL
+    INT 21H
+
+    ;DIVISION
+    MOV AX, 0000
+    MOV AL, NUM1
+    DIV NUM2
+
+    MOV CH, AH
+    ADD CH, 30H
+
+    MOV AH, 0
+    AAA
+    ADD AH, 30H
+    ADD AL, 30H
+
+    MOV BX, AX
+
+    ;IMPRIMIR DIVISION
+    LEA DX, RES4
+    MOV AH, 09
+    INT 21H
+
+    MOV AH, 02
+    MOV DL, BL
+    INT 21H
+
+    LEA DX, RES5
+    MOV AH, 09
+    INT 21H
+
+    MOV AH, 02
+    MOV DL, CH
+    INT 21H
+
+    ; Finalizar el programa
+    MOV AH, 4CH  ; finaliza el proceso
+    INT 21H     ; Ejecuta la interrupción
+End programa

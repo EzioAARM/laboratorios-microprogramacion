@@ -3,9 +3,12 @@
     NUM1 DB ?
     NUM2 DB ?
     RESULT DB ?
+    PD DB ?
+    SD DB ?
+    DIVIDIR DB 10
     MSG1 DB 10, 13, "Ingrese el primer numero:$"
     MSG2 DB 10, 13, "Ingrese el segundo numero:$"
-    RES1 DB 10, 13, "Suma:$"
+    RES1 DB 10, 13, "Total:$"
     RES2 DB 10, 13, "Diferencia:$"
     RES3 DB 10, 13, "Producto:$"
     RES4 DB 10, 13, "Cociente:$"
@@ -17,11 +20,25 @@ Programa:       ; Etiqueta de inicio del Programa
 MOV AX, @DATA    ; Guardando dirección de inicio segmento de
 MOV DS, AX
     
-    MOV NUM1, 6
-    MOV NUM2, 3
+    LEA DX, MSG1
+    MOV AH, 09
+    INT 21H
+
+    MOV AH, 01
+    INT 21H
+    SUB AL, 30H
+    MOV NUM1, AL
+
+    LEA DX, MSG2
+    MOV AH, 09
+    INT 21H
+
+    MOV AH, 01
+    INT 21H
+    SUB AL, 30H
+    MOV NUM2, AL
 
     ;SUMA
-    MOV AL, NUM2
     ADD AL, NUM1
 
     MOV AH, 0
@@ -71,29 +88,35 @@ MOV DS, AX
     INT 21H
 
     ;MULTIPLICACION
+    MOV CL, NUM1
+
+    Multi:
+    MOV AL, NUM2
+    ADD RESULT, AL
+    LOOP Multi
+
+    FinalMulti:
     MOV AX, 0000
-    MOV AL, NUM1
-    MUL NUM2
-    ;MOV RESULT, AL
+    MOV AL, RESULT
+    DIV DIVIDIR
 
-    MOV AH, 0
-    AAA
-    ADD AH, 30H
-    ADD AL, 30H
+    MOV PD, AL
+    MOV SD, AH
 
-    MOV BX, AX
-
-    ;IMPRIMIR MULTIPLICACION
     LEA DX, RES3
     MOV AH, 09
     INT 21H
 
-    MOV AH, 02
-    MOV DL, BH
-    INT 21H
+    ADD PD, 30H
 
     MOV AH, 02
-    MOV DL, BL
+    MOV DL, PD
+    INT 21H
+
+    ADD SD, 30H
+
+    MOV AH, 02
+    MOV DL, SD
     INT 21H
 
     ;DIVISION
