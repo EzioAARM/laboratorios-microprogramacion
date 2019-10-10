@@ -1,9 +1,9 @@
 .MODEL small
 .DATA
     NUM DB ?
-    INMSG DB 10, 13, "Ingrese el numero$"
-    PAR DB 10, 13, "El numero es par$"
-    IMPAR DB 10, 13, "El numero es impar$"
+    INMSG DB 10, 13, "Ingrese el numero: $"
+    PAR DB 10, 13, "El numero es par: $"
+    IMPAR DB 10, 13, "El numero es impar: $"
 .STACK
 .CODE
 Programa:       ; Etiqueta de inicio del Programa
