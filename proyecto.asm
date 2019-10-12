@@ -9,10 +9,20 @@ Programa:       ; Etiqueta de inicio del Programa
 MOV AX, @DATA    ; Guardando dirección de inicio segmento de
 MOV DS, AX
     
+    LIMPIAR_CONSOLA:
+        MOV AX, 0003H
+	    INT 10H
+        MOV AH, 06H
+        MOV AL, 00H
+        MOV BH, 100D
+        MOV CX, 0000H
+        MOV DX, 0064H
+        INT 10H
+
     INICIAR_LECTURA_MOVIMIENTO:
-        MOV AH, 01      ; Interrupción de entrada del teclado
-        INT 21H         ; Ejecución de la interrupción
-        JMP LEER_W      ; Salta a verificar que tecla presionó
+        MOV AH, 01                          ; Interrupción de entrada del teclado
+        INT 21H                             ; Ejecución de la interrupción
+        JMP LEER_W                          ; Salta a verificar que tecla presionó
 
     ; codigo
     LEER_W:
