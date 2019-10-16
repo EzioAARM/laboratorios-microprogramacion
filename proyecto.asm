@@ -1,7 +1,7 @@
 left equ 0
 top equ 2
-row equ 20	;Se cambia la cantidad de numero de lineas
-col equ 50	;Se cambia la cantidad de numero de columnas
+row equ 25	;Se cambia la cantidad de numero de lineas
+col equ 65	;Se cambia la cantidad de numero de columnas
 right equ left+col
 bottom equ top+row
 
@@ -9,6 +9,7 @@ bottom equ top+row
 .data          
     msg db "BIENVENIDOS",0
     instructions db "Usa:",10,13,"WASD para moverte",10,13,"X para salir$"
+    errKeyMsg db "Accion no permitida$"
     quitmsg db "QUIT",0
     gameovermsg db "GAMEOVER", 0
     scoremsg db "PUNTOS: ",0
@@ -16,8 +17,8 @@ bottom equ top+row
     body db 'X',10,11, 3*15 DUP(0)
     segmentcount db 1
     fruitactive db 1
-    fruitx db 8
-    fruity db 8
+    fruitx db 10
+    fruity db 15
     gameover db 0
     quit db 0   
     delaytime db 1
@@ -103,8 +104,8 @@ main proc far
 	MOV CX, 0000H
 	MOV DX, 2555H
 	INT 10H
-	
-    call printbox      
+    
+    call printbox     
 
 mainloop: 
 
@@ -319,19 +320,6 @@ setcursorpos endp
 
 
 draw proc
-
-    lea bx, scoremsg
-    mov dx, 0109
-    call writestringat
-    
-    
-    add dx, 7
-    call setcursorpos
-    mov al, segmentcount
-    dec al
-    xor ah, ah
-    call dispnum
-        
     lea si, head
 draw_loop:
 	
@@ -390,6 +378,32 @@ keyboardfunctions proc
     je next_14
     
     ;so a key was pressed, which key was pressed then solti?
+
+    cmp dl, 'w'
+    je startKeys
+    cmp dl, 'a'
+    je startKeys
+    cmp dl, 's'
+    je startKeys
+    cmp dl, 'd'
+    je startKeys
+    cmp dl, 'x'
+    je startKeys
+    mov dx, 0000H
+    mov ah,02h  
+    mov dh,09                           ; Fila 
+    mov dl,56                           ; Columna
+    int 10h
+    mov ah,09h
+    mov bl,0eh                          ; Color
+    mov cx,1                            
+    mov al, errKeyMsg                ; Mensaje de salida
+    int 10h
+    lea bx, errKeyMsg
+    call writestringat
+    ret
+
+startKeys:
     cmp dl, 'w'
     jne next_11
     cmp head, 'U'		;Cabeza para abajo
@@ -422,13 +436,15 @@ next_13:
 next_14:    
     cmp dl, 'x'							; 		PARA SALIR DEL JUEGO SE UTILIZA LA LETRA X
     je quit_keyboardfunctions
-    ret    
+    ret
 quit_keyboardfunctions:   
     ;conditions for quitting in here please  
     inc quit
     ret
     
 keyboardfunctions endp
+
+
 
 
                     
