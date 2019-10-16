@@ -1,17 +1,17 @@
-left EQU 0
-top EQU 2
-row EQU 20	;Se cambia la cantidad de numero de lineas
-col EQU 50	;Se cambia la cantidad de numero de columnas
-right EQU left+col
-bottom EQU top+row
+left equ 0
+top equ 2
+row equ 20	;Se cambia la cantidad de numero de lineas
+col equ 50	;Se cambia la cantidad de numero de columnas
+right equ left+col
+bottom equ top+row
 
-.MODEL small
-.DATA          
-    msg db "¡Bienvenido!$",0
-    instructions db 0AH,0DH,"Usa las teclas W A S D para MOVerte",0AH,0DH,"Presiona la Q en cualquier momento para salir",0DH,0AH, "Presiona cualquier tecla para continuar...$"
-    quitmsg db "Adios!",0
-    gameovermsg db "GAME OVER", 0
-    scoremsg db "Puntos: ",0
+.model small
+.data          
+    msg db "************************ BIENVENIDOS **************************************",0
+    instructions db 0AH,0DH,"********************** AWSD PARA MOVERTE***********************************",0AH,0DH,"*********************** PRESIONA Q PARA CERRAR ***************************",0DH,0AH, "**************** CONTINUA PRESIONANDO CUALQUIER COSA **********************$"
+    quitmsg db "QUIT",0
+    gameovermsg db "GAMEOVER", 0
+    scoremsg db "PUNTOS: ",0
     head db 'n',10,10
     body db 'X',10,11, 3*15 DUP(0)
     segmentcount db 1
@@ -20,135 +20,134 @@ bottom EQU top+row
     fruity db 8
     gameover db 0
     quit db 0   
-    delaytime db 5
-.STACK
-    dw   128  dup(0)
-.CODE
+    delaytime db 1
+	
+	
+	
 
-main PROC far
-	MOV ax, @data
-	MOV ds, ax 
+.stack
+    dw   128  dup(0)
+
+
+.code
+
+main proc far
+	mov ax, @data
+	mov ds, ax 				; 			PARA ACCEDER A LOS DATOS
 	
-	MOV ax, 0b800H
-	MOV es, ax
+	mov ax, 0b800H
+	mov es, ax
 	
-	;clearing the screen
-	MOV ax, 0003H
-	INT 10H
+	
+	mov ax, 0003H
+	int 10H					;			LIMPIAMOS LA PANTALLA
 	
 	MOV AH, 06H
 	MOV AL, 00H
-    MOV bh, 100D		;cambia el colo arribita
+    mov bh, 100D			;			CAMBIAMOS EL COLOR DE LA PANTALLA A AMARILLO
 	MOV CX, 0000H
 	MOV DX, 2555H
 	INT 10H
 	
-	LEA bx, msg
-	MOV dx,00
-	CALL writestringat
+	lea bx, msg				;			CARGA LA DIRECCION RESULTANTE EN EL OPERANDO DE DESTINO
+	mov dx,00
+	call writestringat
 	
-	LEA dx, instructions
-	MOV ah, 09H
-	INT 21h
+	lea dx, instructions
+	mov ah, 09H
+	int 21h
 	
-	MOV ah, 07h
-	INT 21h
-	MOV ax, 0003H
-	INT 10H
+	mov ah, 07h
+	int 21h
+	mov ax, 0003H
+	int 10H
 	
 	
 	MOV AH, 06H
 	MOV AL, 00H
-    MOV bh, 177D		;CAMBIA EL COLOR DE TODO
+    mov bh, 177D		;				CAMBIA EL COLOR DE A AZUL CON LETRAS NEGRAS
 	MOV CX, 0000H
 	MOV DX, 2555H
 	INT 10H
 	
-    CALL printbox      
-    
-    
+    call printbox      
+
 mainloop: 
 
 
     
-	CALL delay  
+	call delay  
 	
-    LEA bx, msg
-    MOV dx, 00
+    lea bx, msg
+    mov dx, 00
 	
-    CALL writestringat
-    CALL shiftsnake
-    CMP gameover,1
-    JE gameover_mainloop
+    call writestringat
+    call shiftsnake
+    cmp gameover,1
+    je gameover_mainloop
     
-    CALL keyboardfunctions
-    CMP quit, 1
-    JE quitpressed_mainloop
-    CALL fruitgeneration
-    CALL draw
+    call keyboardfunctions
+    cmp quit, 1
+    je quitpressed_mainloop
+    call fruitgeneration
+    call draw
     
     ;TODO: check gameover and quit
     
-    JMP mainloop
+    jmp mainloop
     
-gameover_mainloop:
-    MOV AX, 0003H                       ; Limpia en pantalla 
-    INT 10H                             ; Hace la interrupcion 
-    MOV AH, 06H
-    MOV AL, 00H
-    MOV BH, 40H                         ; Color Amarillo                    
-    MOV CX, 0000H                       ; Posicion inicial que empieza a pintar 
-    MOV DX, 244fH                       ; Posicion final que pinta  
-    INT 10H
-    MOV delaytime, 100
-    MOV dx, 0000H
-    LEA bx, gameovermsg
-    CALL writestringat
-    CALL delay    
-    JMP quit_mainloop    
+gameover_mainloop: 
+    mov ax, 0003H
+	int 10H
+    mov delaytime, 100
+    mov dx, 0000H
+    lea bx, gameovermsg
+    call writestringat
+    call delay    
+    jmp quit_mainloop    
     
 quitpressed_mainloop:
-    MOV ax, 0003H
-	INT 10H    
-    MOV delaytime, 100
-    MOV dx, 0000H
-    LEA bx, quitmsg
-    CALL writestringat
-    CALL delay    
-    JMP quit_mainloop    
+    mov ax, 0003H
+	int 10H    
+    mov delaytime, 100
+    mov dx, 0000H
+    lea bx, quitmsg
+    call writestringat
+    call delay    
+    jmp quit_mainloop    
 
     
     
 
 quit_mainloop:
 ;first clear screen
-MOV ax, 0003H
-INT 10h    
-MOV ax, 4c00h
-INT 21h  
+mov ax, 0003H
+int 10h    
+mov ax, 4c00h
+int 21h  
 
 
 
          
 
 
-delay PROC 
+delay proc 
     
     ;this procedure uses 1A interrupt, more info can be found on   
     ;http://www.computing.dcu.ie/~ray/teaching/CA296/notes/8086_bios_and_dos_interrupts.html
-    MOV ah, 00
-    INT 1Ah
-    MOV bx, dx
+    mov ah, 00
+    int 1Ah
+    mov bx, dx
 	
     
 jmp_delay:
-    INT 1Ah
+    int 1Ah
 	
-    SUB dx, bx
+    sub dx, bx
     ;there are about 18 ticks in a second, 10 ticks are about enough
-    CMP dl, delaytime                                                      
-    JL jmp_delay    
-    RET
+    cmp dl, delaytime                                                      
+    jl jmp_delay    
+    ret
     
 delay endp
    
@@ -156,96 +155,96 @@ delay endp
 
 
 fruitgeneration proc
-    MOV ch, fruity
-    MOV cl, fruitx
+    mov ch, fruity
+    mov cl, fruitx
 	
 regenerate:
     
-    CMP fruitactive, 1
-    JE ret_fruitactive
-    MOV ah, 00
-    INT 1Ah
+    cmp fruitactive, 1
+    je ret_fruitactive
+    mov ah, 00
+    int 1Ah
     ;dx contains the ticks
 	
-    PUSH dx
-    MOV ax, dx
-    XOR dx, dx
-    XOR bh, bh
-    MOV bl, row
-    DEC bl
-    DIV bx
-    MOV fruity, dl
-    INC fruity
+    push dx
+    mov ax, dx
+    xor dx, dx
+    xor bh, bh
+    mov bl, row
+    dec bl
+    div bx
+    mov fruity, dl
+    inc fruity
     
     
-    POP ax
-    MOV bl, col
-    DEC dl
-    XOR bh, bh
-    XOR dx, dx
-    DIV bx
-    MOV fruitx, dl
-    INC fruitx
+    pop ax
+    mov bl, col
+    dec dl
+    xor bh, bh
+    xor dx, dx
+    div bx
+    mov fruitx, dl
+    inc fruitx
     
-    CMP fruitx, cl
-    JNE nevermind
-    CMP fruity, ch
-    JNE nevermind
-    JMP regenerate             
+    cmp fruitx, cl
+    jne nevermind
+    cmp fruity, ch
+    jne nevermind
+    jmp regenerate             
 nevermind:
 	
-    MOV al, fruitx
-    ROR al,1
-    JC regenerate
+    mov al, fruitx
+    ror al,1
+    jc regenerate
     
     
-    ADD fruity, top
-    ADD fruitx, left 
+    add fruity, top
+    add fruitx, left 
     
-    MOV dh, fruity
-    MOV dl, fruitx
-    CALL readcharat
-    CMP bl, 'X'
-    JE regenerate
-    CMP bl, 'n'
-    JE regenerate
-    CMP bl, '('
-    JE regenerate
-    CMP bl, ')'
-    JE regenerate
-    CMP bl, 'U'			;Disque cabeza para abajo pero no creo que sea
-    JE regenerate    
+    mov dh, fruity
+    mov dl, fruitx
+    call readcharat
+    cmp bl, 'X'
+    je regenerate
+    cmp bl, 'n'
+    je regenerate
+    cmp bl, '('
+    je regenerate
+    cmp bl, ')'
+    je regenerate
+    cmp bl, 'U'			;Disque cabeza para abajo pero no creo que sea
+    je regenerate    
     
 ret_fruitactive:
-    RET
+    ret
 fruitgeneration endp
 
 
 dispdigit proc
-    ADD dl, '0'
-    MOV ah, 02H
-    INT 21H
-    RET
+    add dl, '0'
+    mov ah, 02H
+    int 21H
+    ret
 dispdigit endp   
    
-dispnum PROC   
+dispnum proc   
 	
-    TEST ax,ax
-    JZ retz
-    XOR dx, dx
-    ;ax contains the number to be displayed
+    test ax,ax 			;		AX CONTIENE EL NUMERO QUE SE VA A DESPLEGAR
+    jz retz				;		"JUMP IF ZERO" es JZ
+    xor dx, dx
+    
     ;bx must contain 10
-    MOV bx,10
-    DIV bx
+    mov bx,10
+    div bx
     ;dispnum ax first.
-    PUSH dx
-    CALL dispnum  
-    POP dx
-    CALL dispdigit
-    RET
+    push dx
+    call dispnum  
+    pop dx
+    call dispdigit
+    ret
 retz:
-    MOV ah, 02  
-    RET    
+    mov ah, 02  
+    ret    
 dispnum endp   
 
 
@@ -254,50 +253,50 @@ dispnum endp
 ;preserves other registers
 setcursorpos proc
 	
-    MOV ah, 02H
-    PUSH bx
-    MOV bh,0
-    INT 10h
-    POP bx
-    RET
+    mov ah, 02H
+    push bx
+    mov bh,0
+    int 10h
+    pop bx
+    ret
 setcursorpos endp
 
 
 
 draw proc
 
-    LEA bx, scoremsg
-    MOV dx, 0109
-    CALL writestringat
+    lea bx, scoremsg
+    mov dx, 0109
+    call writestringat
     
     
-    ADD dx, 7
-    CALL setcursorpos
-    MOV al, segmentcount
-    DEC al
-    XOR ah, ah
-    CALL dispnum
+    add dx, 7
+    call setcursorpos
+    mov al, segmentcount
+    dec al
+    xor ah, ah
+    call dispnum
         
-    LEA si, head
+    lea si, head
 draw_loop:
 	
-    MOV bl, ds:[si]
-    TEST bl, bl
-    JZ out_draw
-    MOV dx, ds:[si+1]
-    CALL writecharat
-    ADD si,3   
-    JMP draw_loop 
+    mov bl, ds:[si]
+    test bl, bl
+    jz out_draw
+    mov dx, ds:[si+1]
+    call writecharat
+    add si,3   
+    jmp draw_loop 
 
 out_draw:
 	
-    MOV bl, 'O'
-    MOV dh, fruity
-    MOV dl, fruitx
-    CALL writecharat
-    MOV fruitactive, 1
+    mov bl, 'O'
+    mov dh, fruity
+    mov dl, fruitx
+    call writecharat
+    mov fruitactive, 1
     
-    RET
+    ret
     
     
     
@@ -308,17 +307,17 @@ draw endp
 ;dl contains the ascii character if keypressed, else dl contains 0
 ;uses dx and ax, preserves other registers
 readchar proc
-    MOV ah, 02H		;Parte que hace por presionar la tecla 2 veces la tecla para que funciona
-    INT 16H
-    JNZ keybdpressed
-    XOR dl, dl
-    RET
+    mov ah, 02H		;Parte que hace por presionar la tecla 2 veces la tecla para que funciona
+    int 16H
+    jnz keybdpressed
+    xor dl, dl
+    ret
 keybdpressed:
     ;extract the keystroke from the buffer
-    MOV ah, 00H
-    INT 16H
-    MOV dl,al
-    RET
+    mov ah, 00H
+    int 16H
+    mov dl,al
+    ret
 
 
 readchar endp                    
@@ -331,48 +330,48 @@ readchar endp
 
 keyboardfunctions proc
     
-    CALL readchar
-    CMP dl, 0
-    JE next_14
+    call readchar
+    cmp dl, 0
+    je next_14
     
     ;so a key was pressed, which key was pressed then solti?
-    CMP dl, 'w'
-    JNE next_11
-    CMP head, 'U'		;Cabeza para abajo
+    cmp dl, 'w'
+    jne next_11
+    cmp head, 'U'		;Cabeza para abajo
 	
-    JE next_14
-    MOV head, 'n'
-    RET
+    je next_14
+    mov head, 'n'
+    ret
 next_11:
-    CMP dl, 's'
-    JNE next_12
-    CMP head, 'n'
-    JE next_14
+    cmp dl, 's'
+    jne next_12
+    cmp head, 'n'
+    je next_14
 	
-    MOV head, 'U'		;Cabeza para abajo
+    mov head, 'U'		;Cabeza para abajo
 
-    RET
+    ret
 next_12:
-    CMP dl, 'a'
-    JNE next_13
-    CMP head, ')'
-    JE next_14
-    MOV head, '('
-    RET
+    cmp dl, 'a'
+    jne next_13
+    cmp head, ')'
+    je next_14
+    mov head, '('
+    ret
 next_13:
-    CMP dl, 'd'
-    JNE next_14
-    CMP head, '('		;Para hacer el MOVimiento
-    JE next_14
-    MOV head,')'
+    cmp dl, 'd'
+    jne next_14
+    cmp head, '('		;Para hacer el movimiento
+    je next_14
+    mov head,')'
 next_14:    
-    CMP dl, 'q'
-    JE quit_keyboardfunctions
-    RET    
+    cmp dl, 'x'							; 		PARA SALIR DEL JUEGO SE UTILIZA LA LETRA X
+    je quit_keyboardfunctions
+    ret    
 quit_keyboardfunctions:   
     ;conditions for quitting in here please  
-    INC quit
-    RET
+    inc quit
+    ret
     
 keyboardfunctions endp
 
@@ -383,142 +382,143 @@ keyboardfunctions endp
                     
                     
                     
-shiftsnake PROC     
-    MOV bx, offset head
+shiftsnake proc     
+    mov bx, offset head
     
 	
     ;determine the where should the head go solti?
     ;preserve the head
-    XOR ax, ax
-    MOV al, [bx]
-    PUSH ax
-    INC bx
-    MOV ax, [bx]
-    INC bx    
-    INC bx
-    XOR cx, cx
+    xor ax, ax
+    mov al, [bx]
+    push ax
+    inc bx
+    mov ax, [bx]
+    inc bx    
+    inc bx
+    xor cx, cx
 l:  
 	
-    MOV si, [bx]
-    TEST si, [bx]
-    JZ outside
-    INC cx     
-    INC bx
-    MOV dx,[bx]
-    MOV [bx], ax
-    MOV ax,dx
-    INC bx
-    INC bx
-    JMP l
+    mov si, [bx]
+    test si, [bx]
+    jz outside
+    inc cx     
+    inc bx
+    mov dx,[bx]
+    mov [bx], ax
+    mov ax,dx
+    inc bx
+    inc bx
+    jmp l
     
 outside:    
     
     
-    ;hopefully, the snake will be shifted, i.e. MOVed.
+    ;hopefully, the snake will be shifted, i.e. moved.
     ;now shift the head in its proper direction and then clear the last segment. 
     ;But don't clear the last segment if the snake has eaten the fruit
 	
-    POP ax
+    pop ax
     ;al contains the snake head direction
     
-    PUSH dx
+    push dx
     ;dx now consists the coordinates of the last segment, we can use this to clear it
     
     
-    LEA bx, head
-    INC bx
-    MOV dx, [bx]
+    lea bx, head
+    inc bx
+    mov dx, [bx]
     
-    CMP al, '('
-    JNE next_1
-    DEC dl
-    DEC dl
-    JMP done_checking_the_head
+    cmp al, '('
+    jne next_1
+    dec dl
+    dec dl
+    jmp done_checking_the_head
 next_1:
-    CMP al, ')'
-    JNE next_2                
-    INC dl 
-    INC dl
-    JMP done_checking_the_head
+    cmp al, ')'
+    jne next_2                
+    inc dl 
+    inc dl
+    jmp done_checking_the_head
     
 next_2:
-    CMP al, 'n'
-    JNE next_3 
-    DEC dh               
+    cmp al, 'n'
+    jne next_3 
+    dec dh               
                    
     
-    JMP done_checking_the_head
+    jmp done_checking_the_head
     
 next_3:
 	
     ;must be 'v'
-    INC dh
+    inc dh
     
 done_checking_the_head:    
 
 	
-    MOV [bx],dx
+    mov [bx],dx
     ;dx contains the new position of the head, now check whats in that position   
-    CALL readcharat ;dx
+    call readcharat ;dx
     ;bl contains the result
     
-    CMP bl, 'O'
-    JE i_ate_fruit
+    cmp bl, 'O'
+    je i_ate_fruit
     
     ;if fruit was not eaten, then clear the last segment, 
     ;it will be cleared where?
-    MOV cx, dx
-    POP dx 
-    CMP bl, 'X'    ;the snake bit itself, gameover
-    JE game_over
-    MOV bl, 0
-    CALL writecharat
-    MOV dx, cx
+    mov cx, dx
+    pop dx 
+    cmp bl, 'X'    ;the snake bit itself, gameover
+    je game_over
+    mov bl, 0
+    call writecharat
+    mov dx, cx
     
     
     
     
     
-    ;check whether the snake is within the boundary
-    CMP dh, top
-    JE game_over
-    CMP dh, bottom
-    JE game_over
-    CMP dl,left
-    JE game_over
-    CMP dl, right
-    JE game_over
+    ;VERIFICA SI LA SERPIENTE ESTA ADENTRO
+	
+    cmp dh, top
+    je game_over
+    cmp dh, bottom
+    je game_over
+    cmp dl,left
+    je game_over
+    cmp dl, right
+    je game_over
     
     
     
     ;balance the stack, number of segment and the coordinate of the last segment
     
-    RET
+    ret
 game_over:
-    INC gameover
-    RET
+    inc gameover
+    ret
 i_ate_fruit:    
 
     ; add a new segment then
-    MOV al, segmentcount
-    XOR ah, ah
+    mov al, segmentcount
+    xor ah, ah
     
     
-    LEA bx, body
-    MOV cx, 3
-    MUL cx
+    lea bx, body
+    mov cx, 3
+    mul cx
     
-    POP dx
-    ADD bx, ax
-    MOV byte ptr ds:[bx], 'X'
-    MOV [bx+1], dx
-    INC segmentcount 
-    MOV dh, fruity
-    MOV dl, fruitx
-    MOV bl, 0
-    CALL writecharat
-    MOV fruitactive, 0   
-    RET 
+    pop dx
+    add bx, ax
+    mov byte ptr ds:[bx], 'X'
+    mov [bx+1], dx
+    inc segmentcount
+    mov dh, fruity
+    mov dl, fruitx
+    mov bl, 0
+    call writecharat
+    mov fruitactive, 0   
+    ret 
 shiftsnake endp
    
    
@@ -536,38 +536,38 @@ shiftsnake endp
 ;Printbox
 printbox proc
 ;Draw a box around
-    MOV dh, top
-    MOV dl, left
-    MOV cx, col
+    mov dh, top
+    mov dl, left
+    mov cx, col
 	MOV AH, 06H
 	MOV AL, 00H
-    MOV bh, 176D		;cambia el colo arribita
+    mov bh, 176D			;cambia el colo arribita
 	INT 10H
 
 l1:                 
-    CALL writecharat
-    INC dl
+    call writecharat		;Lo mueve de tal manera de hacer la distancia de izquierda a derecha
+    inc dl
     loop l1    
-    MOV cx, row
+    mov cx, row
 	
 l2:
-    CALL writecharat
-    INC dh
+    call writecharat		;Pinta todo los cuadritos de arriba para abajo del lado derecho
+    inc dh
     loop l2
     
-    MOV cx, col
-l3:
-    CALL writecharat
-    DEC dl
+    mov cx, col
+l3:							;Pinta todo los cuadritos de abajo
+    call writecharat
+    dec dl
     loop l3
 
-    MOV cx, row     
-l4:
-    CALL writecharat    
-    DEC dh 
-    loop l4    
+    mov cx, row     		;Lo mueve de tal manera de hacer la distancia
+l4:							;Pinta todo los cuadritos de lado izquierdo
+    call writecharat    
+    dec dh 
+    loop l4    				
     
-    RET
+    ret
 printbox endp
               
               
@@ -577,7 +577,7 @@ printbox endp
               
               
               
-              
+; POR ACA VOY     
 ;dx contains row, col
 ;bl contains the character to write
 ;uses di. 
@@ -585,31 +585,31 @@ writecharat proc
     ;80x25
 	
 	
-    PUSH dx
-    MOV ax, dx
-    AND ax, 0FF00H
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
+    push dx
+    mov ax, dx
+    and ax, 0FF00H
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
     
 	
     
-    PUSH bx
-    MOV bh, 160
-    MUL bh 
-    POP bx
-    AND dx, 0FFH
-    SHL dx,1
-    ADD ax, dx
-    MOV di, ax
-    MOV es:[di], bl
-    POP dx
-    RET    
+    push bx
+    mov bh, 160
+    mul bh 
+    pop bx
+    and dx, 0FFH
+    shl dx,1
+    add ax, dx
+    mov di, ax
+    mov es:[di], bl
+    pop dx
+    ret    
 writecharat endp
             
             
@@ -619,33 +619,34 @@ writecharat endp
             
             
             
-            
+;ESTA PARTE HACE LA VALIDACION DEL CIRCULO CON LA BOLITA, VALIDA SI SE LA 
+;COME O NO Y HACE EL PROCESO         
 ;dx contains row,col
 ;returns the character at bl
 ;uses di
 readcharat proc
-    PUSH dx
-    MOV ax, dx
-    AND ax, 0FF00H
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1    
-    PUSH bx
-    MOV bh, 160
-    MUL bh 
-    POP bx
-    AND dx, 0FFH
-    SHL dx,1
-    ADD ax, dx
-    MOV di, ax
-    MOV bl,es:[di]
-    POP dx
-    RET
+    push dx
+    mov ax, dx				; cambia los valores de ax y dx
+    and ax, 0FF00H
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1    
+    push bx
+    mov bh, 160
+    mul bh 
+    pop bx
+    and dx, 0FFH
+    shl dx,1
+    add ax, dx
+    mov di, ax
+    mov bl,es:[di]
+    pop dx
+    ret
 readcharat endp        
 
 
@@ -655,50 +656,52 @@ readcharat endp
 
 
 
-;dx contains row, col
+;DX CONTIENE LAS COLUMNAS Y LINEAS
 ;bx contains the offset of the string
 writestringat proc
 
 	
-    PUSH dx
-    MOV ax, dx
-    AND ax, 0FF00H
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
-    SHR ax,1
+    push dx				; LUEGO TRANSFIERE EL CONTENIDO DEL OPERANDO FUENTE A LA NEUVA DIRECCION 
+						;RESULTANTE EN EL REGISTRO RECIEN MODIFICAO
+						
+    mov ax, dx
+    and ax, 0FF00H
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
+    shr ax,1
     
-    PUSH bx
-    MOV bh, 160
-    MUL bh
+    push bx
+    mov bh, 160
+    mul bh
     
-    POP bx
-    AND dx, 0FFH
-    SHL dx,1
-    ADD ax, dx
-    MOV di, ax
-loop_writestringat:
+    pop bx
+    and dx, 0FFH
+    shl dx,1			; SE UTILIZA PARA DESPLAZAR EL OPERANDO DE LA IZQUIERDA, QUE ES SIEMPRE TRATADO COMO SIN SIGNO
+    add ax, dx
+    mov di, ax
+loop_writestringat:			
     
 	
 	
-    MOV al, [bx]
-    TEST al, al
-    JZ exit_writestringat
-    MOV es:[di], al
-    INC di
-    INC di
-    INC bx
-    JMP loop_writestringat
+    mov al, [bx]
+    test al, al
+    jz exit_writestringat	; "JUMP IF ZERO" es JZ	IMPRIMIE TODO LO QUE TIENE QUE IMPRIMIR HASTA QUE YA NO HAYA NADAWW
+    mov es:[di], al			; lo imprime en pantalla el primer mensaje
+    inc di					; para imprimir
+    inc di					; para imprimir
+    inc bx					; para imprimir
+    jmp loop_writestringat
     
     
 exit_writestringat:
 
-    POP dx
-    RET
+    pop dx	
+    ret						; Retorna al metodo desde que se llamo		
     
     
 writestringat endp
