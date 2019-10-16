@@ -7,8 +7,8 @@ bottom equ top+row
 
 .model small
 .data          
-    msg db "************************ BIENVENIDOS **************************************",0
-    instructions db 0AH,0DH,"********************** AWSD PARA MOVERTE***********************************",0AH,0DH,"*********************** PRESIONA Q PARA CERRAR ***************************",0DH,0AH, "**************** CONTINUA PRESIONANDO CUALQUIER COSA **********************$"
+    msg db "BIENVENIDOS",0
+    instructions db "Usa:",10,13,"WASD para moverte",10,13,"X para salir$"
     quitmsg db "QUIT",0
     gameovermsg db "GAMEOVER", 0
     scoremsg db "PUNTOS: ",0
@@ -49,19 +49,53 @@ main proc far
 	MOV DX, 2555H
 	INT 10H
 	
-	lea bx, msg				;			CARGA LA DIRECCION RESULTANTE EN EL OPERANDO DE DESTINO
-	mov dx,00
-	call writestringat
-	
-	lea dx, instructions
-	mov ah, 09H
-	int 21h
+
+    
+	mov dx, 0000H
+    mov ah,02h  
+    mov dh,12                           ; Fila 
+    mov dl,36                           ; Columna
+    int 10h
+    mov ah,09h
+    mov bl,0eh                          ; Color
+    mov cx,1                            
+    mov al, msg                ; Mensaje de salida
+    int 10h
+    lea bx, msg
+    call writestringat  
 	
 	mov ah, 07h
 	int 21h
 	mov ax, 0003H
 	int 10H
+
+    mov ax, 0003H
+	int 10H					;			LIMPIAMOS LA PANTALLA
 	
+	MOV AH, 06H
+	MOV AL, 00H
+    mov bh, 100D			;			CAMBIAMOS EL COLOR DE LA PANTALLA A AMARILLO
+	MOV CX, 0000H
+	MOV DX, 2555H
+	INT 10H
+
+    mov dx, 0000H
+    mov ah,02h  
+    mov dh,09                           ; Fila 
+    mov dl,36                           ; Columna
+    int 10h
+    mov ah,09h
+    mov bl,0eh                          ; Color
+    mov cx,1                            
+    mov al, instructions                ; Mensaje de salida
+    int 10h
+    lea bx, instructions
+    call writestringat
+	
+    mov ah, 07h
+	int 21h
+	mov ax, 0003H
+	int 10H
 	
 	MOV AH, 06H
 	MOV AL, 00H
@@ -123,6 +157,15 @@ quitpressed_mainloop:
     INT 10H  
     mov delaytime, 100
     mov dx, 0000H
+    mov ah,02h  
+    mov dh,10                           ; Fila 
+    mov dl,40                           ; Columna
+    int 10h
+    mov ah,09h
+    mov bl,0eh                          ; Color
+    mov cx,1                            
+    mov al, quitmsg                     ; Mensaje de salida
+    int 10h
     lea bx, quitmsg
     call writestringat
     call delay    
