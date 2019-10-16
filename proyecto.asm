@@ -97,8 +97,14 @@ mainloop:
     jmp mainloop
     
 gameover_mainloop: 
-    mov ax, 0003H
-	int 10H
+    MOV AX, 0003H                       ; Limpia en pantalla 
+    INT 10H                             ; Hace la interrupcion 
+    MOV AH, 06H
+    MOV AL, 00H
+    MOV BH, 40H                         ; Color Amarillo                    
+    MOV CX, 0000H                       ; Posicion inicial que empieza a pintar 
+    MOV DX, 244fH                       ; Posicion final que pinta  
+    INT 10H
     mov delaytime, 100
     mov dx, 0000H
     lea bx, gameovermsg
@@ -107,8 +113,14 @@ gameover_mainloop:
     jmp quit_mainloop    
     
 quitpressed_mainloop:
-    mov ax, 0003H
-	int 10H    
+    MOV AX, 0003H                       ; Limpia en pantalla 
+    INT 10H                             ; Hace la interrupcion 
+    MOV AH, 06H
+    MOV AL, 00H
+    MOV BH, 40H                         ; Color Amarillo                    
+    MOV CX, 0000H                       ; Posicion inicial que empieza a pintar 
+    MOV DX, 244fH                       ; Posicion final que pinta  
+    INT 10H  
     mov delaytime, 100
     mov dx, 0000H
     lea bx, quitmsg
