@@ -1,47 +1,60 @@
 .MODEL small
 .DATA
-    NUM DB ?
-    INMSG DB 10, 13, "Ingrese el numero: $"
-    PAR DB 10, 13, "El numero es par: $"
-    IMPAR DB 10, 13, "El numero es impar: $"
+    Numero01 DB ?                   
+    Numero02 DB ?                   
+    Unidades DB ?                      
+    Decenas DB ?                      
+    ResultadoMultiplicacion DB 'El resultado es: $'
 .STACK
 .CODE
-Programa:       ; Etiqueta de inicio del Programa
-;inicializar el Programa
-MOV AX, @DATA    ; Guardando dirección de inicio segmento de
-MOV DS, AX
+Programa:
+    MOV AX,@DATA
+    MOV DS, AX
+    
+    MOV AX, 03H
+    INT 10H
 
-    LEA DX, INMSG
-    MOV AH, 09
+    MOV AH, 01H
     INT 21H
-
-    MOV AH, 01
+    MOV Numero01, AL
     INT 21H
-    SUB AL, 30H
-    MOV NUM, AL
+    MOV Numero02, AL
 
-    MOV AH, NUM
-    MOV BL, NUM
+    SUB Numero01, 30h
+    SUB Numero02, 30h
 
-    CMP BL, 1
-
-    JP EsPar
-    JNP EsImpar
-
-    EsPar:
+    XOR DX,DX
+    MOV DX, OFFSET ResultadoMultiplicacion
     MOV AH, 09H
-    LEA DX, PAR
     INT 21H
-    JMP Terminar
 
-    EsImpar:
-    MOV AH, 09H
-    LEA DX, IMPAR
+    XOR AX,AX           
+    XOR DX, DX
+    MOV AL, Numero01        
+    MOV CL, Numero02
+    MOV DL, 0h
+Multiplicar:
+    ADD DL, Numero01
+    Loop Multiplicar
+    
+    MOV CL, 05H
+    ADD CL, 05H
+    
+    MOV AL, DL
+    DIV CL
+    MOV Decenas, AL          
+    MOV Unidades, AH         
+    XOR AX,AX
+        
+    ADD Decenas, 30H         
+    ADD Unidades, 30H         
+    MOV DL, Decenas
+    MOV AH, 02H         
     INT 21H
-    JMP Terminar
+    
+    MOV DL, Unidades       
+    INT 21H
 
-Terminar:
-; Finalizar el programa
-MOV AH, 4CH  ; finaliza el proceso
-INT 21H     ; Ejecuta la interrupción
+    MOV AH,4CH
+    INT 21H             
 END Programa
