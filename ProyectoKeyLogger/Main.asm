@@ -1,14 +1,11 @@
 .386
-;model
-.model flat, stdcall				;flat es como small
+.model flat, stdcall
 option casemap:none
-;includes
 include \masm32\include\windows.inc
 include \masm32\include\kernel32.inc
 include \masm32\include\masm32.inc
 include \masm32\include\masm32rt.inc
 include \masm32\include\user32.inc
-;librerias
 includelib \masm32\lib\kernel32.lib
 includelib \masm32\lib\masm32.lib
 includelib \masm32\lib\user32.lib
@@ -38,73 +35,70 @@ WinMain proto :DWORD, :DWORD, :DWORD, :DWORD
 	time_buf		db 20 dup (32)
 	dateformat		db " dddd, MMMM, dd, yyyy", 0
 					db 0
-	timeformat		db "hh:mm:ss tt",0
+	timeformat		db "hh:mm:ss tt", 0
 
 .data?
-	fecha			dw ?
+	fecha			dd ?
 	manejo			dd ?
 	key				dd ?
 	bytesw			dd ?
+	cadenaFinal		db ?
 .code
 program:
-	call main
-	main proc
+	CALL main
+	main PROC
+
+		INVOKE				StdOut, ADDR inicio
+		INVOKE				StdOut, ADDR continuacion
+
+		MOV					edx, OFFSET directorio
 		
-
-		INVOKE StdOut, addr inicio			; Imprime el mensaje de inicio
-		INVOKE StdOut, addr continuacion	; Imprime el mensaje de presionar una tecla para continuar
-
-		mov edx, offset directorio			; Coloca el nombre del archivo en el registro edx
-		
-		INVOKE CreateFile, edx, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL,NULL			; Crea y abre el archivo para escribir
-		INVOKE SetFilePointer, eax, 0, 0, FILE_END				; Coloca el puntero
-
-		mov manejo, eax
-		cmp eax, INVALID_HANDLE_VALUE	;Error de creacion del archivo
-		je fin_programa
+		INVOKE				CreateFile, ADDR directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
+		MOV					manejo, EAX
+		CMP					EAX, INVALID_HANDLE_VALUE
+		JE					fin_programa
 
 		keylogger:
 
-		call crt__getch
-		mov key, eax
-		cmp eax, 0
-		je seguir
+			CALL			crt__getch
+			MOV				key, EAX
+			CMP				EAX, 0
+			JE				seguir
 
-		;invoke GetKeyNameTextA, WM_CHAR, addr key, 64
-		invoke MessageBox,NULL,addr key,addr key,MB_OK
+		verificacion:
 
-		;invoke StdIn, addr key, 1
-		
-		INVOKE CreateFile, addr directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0
-		mov manejo, eax
-		INVOKE SetFilePointer, manejo, 0, 0, FILE_END
-		INVOKE WriteFile,manejo,addr key,1,addr bytesw,NULL
-		INVOKE WriteFile,manejo,addr fecha,1,addr bytesw,NULL
-		mov eax, manejo
-		INVOKE CloseHandle, eax
-
-		mov ebx, key						;moviendo la entrada a la variable "key"
-		cmp ebx, 20h						;si es un espacio
-		JZ ObtenerFH
-		cmp ebx, 0ah						;si es un ENTER
-		JZ ObtenerFH
-		jmp seguir							;de lo contrario, sigue leyendo teclado
-
-		ObtenerFH:
-			invoke   GetDateFormat, 0, 0, \
-				0, ADDR dateformat, ADDR date_buf, 50
-			mov   ecx, offset date_buf
-			add   ecx, eax; add length returned by GetDateFormat
-			mov   byte ptr [ecx-1], " " ;replace null with space
-			invoke   GetTimeFormat, 0, 0, \
-				0, ADDR timeformat, ecx, 20
+			MOV				EBX, key						;moviendo la entrada a la variable "key"
+			CMP				EBX, 0ah						;si es un espacio
+			JZ				EscribirFecha
+			CMP				EBX, 13							;si es un ENTER
+			JZ				EscribirFecha
+			JMP				seguir							;de lo contrario, sigue leyendo teclado
 
 		seguir:
-		;invoke StdOut, addr key
-		jmp keylogger
+			JMP				keylogger
 
 
 		fin_programa:
-		invoke ExitProcess,0
-	main endp
-end program
+			INVOKE			ExitProcess, 0
+
+		EscribirClave:
+			INVOKE			CreateFile, ADDR directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
+			MOV				manejo, EAX
+			INVOKE			SetFilePointer, manejo, 0, 0, FILE_END
+			INVOKE			WriteFile, manejo, ADDR key, 1, ADDR bytesw, NULL
+			MOV				EAX, manejo
+			INVOKE			CloseHandle, EAX
+			JMP				verificacion
+
+		EscribirFecha:
+			INVOKE			GetSystemTime, addr sysTime
+			INVOKE			CreateFile, ADDR directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
+			MOV				manejo, EAX
+			INVOKE			SetFilePointer, manejo, 0, 0, FILE_END
+			INVOKE			WriteFile, manejo, addr sysTime, 1, ADDR bytesw, NULL
+			MOV				EAX, manejo
+			INVOKE			CloseHandle, EAX
+			JMP				seguir
+
+	main ENDP
+END program
