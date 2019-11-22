@@ -7,5 +7,5 @@
 *.o
 *.obj
 *.bc
-
+*.opendb
 # End of https://www.gitignore.io/api/assembler
